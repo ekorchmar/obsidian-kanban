@@ -19,6 +19,7 @@ const illegalCharsRegEx = /[\\/:"*?<>|]+/g;
 const embedRegEx = /!?\[\[([^\]]*)\.[^\]]+\]\]/g;
 const wikilinkRegEx = /!?\[\[([^\]]*)\]\]/g;
 const mdLinkRegEx = /!?\[([^\]]*)\]\([^)]*\)/g;
+const hashTagRegEx = /(?:\s|^)#(\w+)/g;
 
 interface UseItemMenuParams {
   setIsEditing: Preact.StateUpdater<boolean>;
@@ -60,6 +61,15 @@ export function useItemMenu({
               .setTitle(t('New note from card'))
               .onClick(async () => {
                 const prevTitle = item.data.title.split('\n')[0].trim();
+
+                const newNoteFolder =
+                  stateManager.getSetting('new-note-folder');
+                const newNoteTemplatePath =
+                  stateManager.getSetting('new-note-template');
+                const newNoteInheritTags = stateManager.getSetting(
+                  'new-note-inherit-tags'
+                );
+
                 const sanitizedTitle = prevTitle
                   .replace(embedRegEx, '$1')
                   .replace(wikilinkRegEx, '$1')
@@ -67,10 +77,14 @@ export function useItemMenu({
                   .replace(illegalCharsRegEx, ' ')
                   .trim();
 
-                const newNoteFolder =
-                  stateManager.getSetting('new-note-folder');
-                const newNoteTemplatePath =
-                  stateManager.getSetting('new-note-template');
+                const tags: string[] = [];
+                if (newNoteInheritTags) {
+                  const tagMatches = sanitizedTitle.match(hashTagRegEx);
+                  tagMatches.forEach((tag) => {
+                    tags.push(tag.trim().slice(1));
+                  });
+                  sanitizedTitle.replace(hashTagRegEx, '$1');
+                }
 
                 const targetFolder = newNoteFolder
                   ? (stateManager.app.vault.getAbstractFileByPath(
@@ -80,12 +94,12 @@ export function useItemMenu({
                       stateManager.file.path
                     );
 
+                const fileManager = stateManager.app.fileManager as any;
                 const newFile = (await (
-                  stateManager.app.fileManager as any
+                  fileManager as any
                 ).createNewMarkdownFile(targetFolder, sanitizedTitle)) as TFile;
 
-                const newLeaf = stateManager.app.workspace.splitActiveLeaf();
-
+                const newLeaf = stateManager.app.workspace.getLeaf();
                 await newLeaf.openFile(newFile);
 
                 stateManager.app.workspace.setActiveLeaf(newLeaf, false, true);
@@ -95,9 +109,26 @@ export function useItemMenu({
                   newNoteTemplatePath as string | undefined
                 );
 
+                if (tags.length) {
+                  await fileManager.processFrontmatter(
+                    newFile,
+                    (frontMatter: any) => {
+                      try {
+                        const existingTags: string[] = frontMatter.tags || [];
+                        const newTags = [
+                          ...new Set([...tags, ...existingTags]),
+                        ];
+                        frontMatter.tags = newTags;
+                      } catch (e) {
+                        console.error('Abandon modifying tags:', e);
+                      }
+                    }
+                  );
+                }
+
                 const newTitleRaw = item.data.titleRaw.replace(
                   prevTitle,
-                  stateManager.app.fileManager.generateMarkdownLink(
+                  fileManager.generateMarkdownLink(
                     newFile,
                     stateManager.file.path
                   )

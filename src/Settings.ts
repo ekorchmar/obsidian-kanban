@@ -36,6 +36,10 @@ import {
   getListOptions,
 } from './settingHelpers';
 import {
+  cleanUpDateSettings,
+  renderDateSettings,
+} from './settings/DateColorSettings';
+import {
   cleanupMetadataSettings,
   renderMetadataSettings,
 } from './settings/MetadataSettings';
@@ -43,10 +47,6 @@ import {
   cleanUpTagSettings,
   renderTagSettings,
 } from './settings/TagColorSettings';
-import {
-  cleanUpDateSettings,
-  renderDateSettings,
-} from './settings/DateColorSettings';
 
 const numberRegEx = /^\d+(?:\.\d+)?$/;
 
@@ -72,6 +72,7 @@ export interface KanbanSettings {
   'new-line-trigger'?: 'enter' | 'shift-enter';
   'new-note-folder'?: string;
   'new-note-template'?: string;
+  'new-note-inherit-tags'?: boolean;
   'archive-with-date'?: boolean;
   'append-archive-date'?: boolean;
   'archive-date-format'?: string;
@@ -111,6 +112,7 @@ export const settingKeyLookup: Record<keyof KanbanSettings, true> = {
   'new-line-trigger': true,
   'new-note-folder': true,
   'new-note-template': true,
+  'new-note-inherit-tags': true,
   'archive-with-date': true,
   'append-archive-date': true,
   'archive-date-format': true,
