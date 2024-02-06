@@ -295,6 +295,56 @@ export class SettingsManager {
       );
 
     new Setting(contentEl)
+      .setName(t('Notes from cards inherit tags'))
+      .setDesc(
+        t(
+          'When toggled, notes created from cards will store the original tags in frontmatter'
+        )
+      )
+      .then((setting) => {
+        let toggleComponent: ToggleComponent;
+
+        setting
+          .addToggle((toggle) => {
+            toggleComponent = toggle;
+
+            const [value, globalValue] = this.getSetting(
+              'new-note-inherit-tags',
+              local
+            );
+
+            if (value !== undefined) {
+              toggle.setValue(value as boolean);
+            } else if (globalValue !== undefined) {
+              toggle.setValue(globalValue as boolean);
+            }
+
+            toggle.onChange((newValue) => {
+              this.applySettingsUpdate({
+                'new-note-inherit-tags': {
+                  $set: newValue,
+                },
+              });
+            });
+          })
+          .addExtraButton((b) => {
+            b.setIcon('lucide-rotate-ccw')
+              .setTooltip(t('Reset to default'))
+              .onClick(() => {
+                const [, globalValue] = this.getSetting(
+                  'new-note-inherit-tags',
+                  local
+                );
+                toggleComponent.setValue(!!globalValue);
+
+                this.applySettingsUpdate({
+                  $unset: ['new-note-inherit-tags'],
+                });
+              });
+          });
+      });
+
+    new Setting(contentEl)
       .setName(t('Hide card counts in list titles'))
       .setDesc(t('When toggled, card counts are hidden from the list title'))
       .then((setting) => {

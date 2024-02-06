@@ -65,6 +65,9 @@ export default {
   'Notes created from Kanban cards will be placed in this folder. If blank, they will be placed in the default location for this vault.':
     'Notes created from Kanban cards will be placed in this folder. If blank, they will be placed in the default location for this vault.',
   'Default folder': 'Default folder',
+  'Notes from cards inherit tags': 'Notes from cards inherit tags',
+  'When toggled, notes created from cards will store the original tags in frontmatter':
+    'When toggled, notes created from cards will store the original tags in frontmatter',
   'List width': 'List width',
   'Enter a number to set the list width in pixels.':
     'Enter a number to set the list width in pixels.',
